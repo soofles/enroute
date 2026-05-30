@@ -1,0 +1,34 @@
+{
+  "name": "travel-planner-name-tbd",
+  "version": "1.0.0",
+  "description": "[insert name here] is a travel planner desktop app.",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "frontend": "cd frontend && npm run dev",
+    "electron": "wait-on http://localhost:5173 && electron .",
+    "dev": "concurrently \"npm run frontend\" \"npm run electron\"" 
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soofles/travel-planner-name-tbd.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/soofles/travel-planner-name-tbd/issues"
+  },
+  "homepage": "https://github.com/soofles/travel-planner-name-tbd#readme",
+  "dependencies": {
+    "electron": "^42.3.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.0",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3",
+    "wait-on": "^9.0.10"
+  }
+}
