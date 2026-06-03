@@ -54,7 +54,7 @@ def get_trip(
 @app.put("/trips/{trip_id}")
 def update_trip(
     trip_id: int,
-    trip_input: TripRequest
+    trip_input: TripRequest,
     session: Session = Depends(get_session)
 ):
     trip = session.get(Trip, trip_id)
