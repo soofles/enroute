@@ -1,34 +1,72 @@
-import { useEffect, useState } from "react"
-import type { Trip } from "../types/Trip";
-import { getTrips } from "../api/tripAPI";
+import { useState, useEffect } from "react"
+import type { Trip } from "../types/Trip"
 
-export default function LeftSidebar() {
-    const [trips, setTrips] = useState<Trip[]>([]);
+interface LeftSidebarProps {
+    trips: Trip[];
+    // selectedTrip: number | null;
+    onSelectTrip: (id: number) => void;
+    onCreateTrip: () => Promise<void>;
+    onDeleteTrip: (id: number) => void;
+}
 
-    const loadTrips = async () => {
-        const res = await getTrips();
-        setTrips(res);
-    }
+export default function LeftSidebar({
+    trips,
+    // selectedTrip,
+    onSelectTrip,
+    onCreateTrip,
+    onDeleteTrip,
+}: LeftSidebarProps) {
+    const [contextTrip, setContextTrip] = useState<number | null>(null);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
-        loadTrips();
-    }, []);
+        const handleClick = () => {
+            setContextTrip(null);
+        };
+        window.addEventListener("click", handleClick);
+        return () => {
+            window.removeEventListener("click", handleClick)
+        }
+    })
 
     return (
         <aside className="left-sidebar">
             <h2>Trips</h2>
-            <ul>
-                {trips.map((trip) => {
-                    return (
-                        <li key={trip.id}>
-                            {trip.name}
-                        </li>
-                    )
-                })}
-            </ul>
-            <button>+ New trip</button>
+            {trips.map((trip) => {
+                return (
+                    <div
+                        key={trip.id}
+                        onClick={() => onSelectTrip(trip.id)}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            setContextTrip(trip.id);
+                            setPosition({ x: e.clientX, y: e.clientY });
+                        }}
+                    >
+                        {trip.name}
+                    </div>
+                )
+            })}
+            <button onClick={onCreateTrip}>+ New trip</button>
             <hr/>
             <h3>Settings</h3>
+
+            {contextTrip !== null && (
+                <div
+                    style={{
+                        top: position.y,
+                        left: position.x,
+                    }}
+                >
+                    <button onClick={async () => {
+                        if(contextTrip === null) return;
+                        await onDeleteTrip(contextTrip);
+                        setContextTrip(null);
+                    }}>
+                        Delete Trip
+                    </button>
+                </div>
+            )}
         </aside>
     )
 }

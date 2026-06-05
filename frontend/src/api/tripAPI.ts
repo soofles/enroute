@@ -1,16 +1,13 @@
 import { api } from "./client";
+import type { OkResponse } from "./client";
 import type { Trip } from "../types/Trip";
 
 export interface TripRequest {
     name: string;
     description: string;
-    startDate: string;
-    endDate: string;
+    start_date: string;
+    end_date: string;
     budget: number;
-}
-
-export interface DeleteResponse {
-    ok: boolean;
 }
 
 export async function createTrip(input: TripRequest): Promise<Trip> {
@@ -51,8 +48,8 @@ export async function updateTrip(id: number, input: TripRequest): Promise<Trip> 
     });
 }
 
-export async function deleteTrip(id: number): Promise<DeleteResponse> {
-    return api<DeleteResponse>(`/trips/${id}`, {
+export async function deleteTrip(id: number): Promise<OkResponse> {
+    return api<OkResponse>(`/trips/${id}`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",

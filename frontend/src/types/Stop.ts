@@ -7,7 +7,7 @@ export interface Stop {
     latitude: number;
     longitude: number;
     cost: number;
-    timeZone: string;
-    arrivalTime: string;
-    departureTime: string;
+    time_zone: string;
+    arrival_time: string;
+    departure_time: string;
 }

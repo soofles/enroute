@@ -2,74 +2,41 @@ import "./CenterTimeline.css"
 import { buildTimeline } from "../utils/TimelineBuilder"
 import { DndContext, closestCenter } from "@dnd-kit/core"
 import type { DragEndEvent } from "@dnd-kit/core"
-import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
-import { useState } from "react"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import type { Trip } from "../types/Trip"
 import type { Stop } from "../types/Stop"
 import SortableStopItem from "./SortableStopItem"
 import TravelItem from "./TravelItem"
 
-// Test Data
-const testStops = [
-  {
-    id: 1,
-    name: "Tokyo Tower",
-    category: "Attraction",
-    description: "",
-    address: "Tokyo",
-    latitude: 0,
-    longitude: 0,
-    cost: 35,
-    timeZone: "Asia/Tokyo",
-    arrivalTime: "10:00",
-    departureTime: "12:00",
-  },
-  {
-    id: 2,
-    name: "Shibuya Crossing",
-    category: "Attraction",
-    description: "",
-    address: "Tokyo",
-    latitude: 0,
-    longitude: 0,
-    cost: 0,
-    timeZone: "Asia/Tokyo",
-    arrivalTime: "12:30",
-    departureTime: "13:30",
-  },
-  {
-    id: 3,
-    name: "Sushi Place",
-    category: "Attraction",
-    description: "",
-    address: "Tokyo",
-    latitude: 0,
-    longitude: 0,
-    cost: 60,
-    timeZone: "Asia/Tokyo",
-    arrivalTime: "14:00",
-    departureTime: "15:00",
-  },
-];
+interface CenterTimelineProps {
+    trip: Trip | null;
+    stops: Stop[];
+    onDragEnd: (e: DragEndEvent) => void;
+}
 
-export default function CenterTimeline() {
-    const [stops, setStops] = useState<Stop[]>(testStops);
+export default function CenterTimeline({
+    trip,
+    stops,
+    onDragEnd,
+}: CenterTimelineProps) {
     const timeline = buildTimeline(stops);
-    const stopIds = stops.map(stop => stop.id.toString());
-    function handleDragEnd(event: DragEndEvent) {
-        const { active, over } = event;
-        if (!over || active.id === over.id) return;
-        setStops(prevList => {
-            const oldIndex = prevList.findIndex(stop => stop.id.toString() === active.id);
-            const newIndex = prevList.findIndex(stop => stop.id.toString() === over.id);
-            return arrayMove(prevList, oldIndex, newIndex);
-        })
+
+    if (!trip) {
+        return (
+            <main className="welcome-message">
+                <h1>Select a trip to get started!</h1>
+            </main>
+        )
     }
+
     return (
         <main className="center-timeline">
-            <h1>Trip Name</h1>
+            <h1>{trip.name}</h1>
+            <p>{trip.description}</p>
+            <p>{trip.start_date} - {trip!.end_date}</p>
             <div className="timeline-container">
-                <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
-                    <SortableContext items={stopIds} strategy={verticalListSortingStrategy}>
+                <DndContext onDragEnd={onDragEnd} collisionDetection={closestCenter}>
+                    <SortableContext items={stops} strategy={verticalListSortingStrategy}>
                     {timeline.map((item) => {
                         if (item.type === "stop") {
                             return (
@@ -95,7 +62,7 @@ export default function CenterTimeline() {
                     </SortableContext>
                 </DndContext>
             </div>
-            <p>Trip summary here</p>
+            <p>Budget: {trip!.budget}</p>
         </main>
     )
 }

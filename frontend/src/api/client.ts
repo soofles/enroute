@@ -1,4 +1,9 @@
+// Base URL for potential web scaling later
 const API_BASE_URL = "http://localhost:8000";
+
+export interface OkResponse {
+    ok: boolean;
+}
 
 export async function api<T>(
     endpoint: string,
