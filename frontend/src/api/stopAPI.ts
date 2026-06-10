@@ -7,8 +7,8 @@ export interface StopRequest {
     category: string;
     description: string;
     address: string;
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
     cost: number;
     time_zone: string;
     arrival_time: string;
