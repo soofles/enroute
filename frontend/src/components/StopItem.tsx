@@ -12,7 +12,7 @@ export default function StopItem({ stop }: StopProps) {
             <h3>{stop.name}</h3>
             <span>{stop.address}</span>
             <span>${stop.cost}</span>
-            <span>{formatDateTime(stop.arrival_time)} - {formatDateTime(stop.departure_time)}</span>
+            <span>{formatDateTime(stop.arrival_time)} — {formatDateTime(stop.departure_time)}</span>
         </div>
     )
 }

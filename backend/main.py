@@ -1,8 +1,9 @@
+from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from db import init_db, get_session
-from models import Trip, TripRequest, Stop, StopRequest, StopReorder
+from models import Trip, TripRequest, Stop, StopRequest, StopReorder, Route, RouteRequest
 
 app = FastAPI()
 
@@ -35,13 +36,13 @@ def create_trip(
     session.refresh(trip)
     return trip
 
-@app.get("/trips")
+@app.get("/trips", response_mode=List[Trip])
 def get_trips(
     session: Session = Depends(get_session)
 ):
     return session.exec(select(Trip)).all()
 
-@app.get("/trips/{trip_id}")
+@app.get("/trips/{trip_id}", response_model=Trip)
 def get_trip(
     trip_id: int,
     session: Session = Depends(get_session)
@@ -100,14 +101,14 @@ def create_stop(
     session.refresh(stop)
     return stop
 
-@app.get("/trips/{trip_id}/stops")
+@app.get("/trips/{trip_id}/stops", response_model=List[Stop])
 def get_stops(
     trip_id: int,
     session: Session = Depends(get_session)
 ):
     return session.exec(select(Stop).where(Stop.trip_id == trip_id).order_by(Stop.sort_order)).all()
 
-@app.get("/stops/{stop_id}")
+@app.get("/stops/{stop_id}", response_model=Stop)
 def get_stop(
     stop_id: int,
     session: Session = Depends(get_session)
@@ -123,6 +124,7 @@ def update_stop(
     stop_input: StopRequest,
     session: Session = Depends(get_session)
 ):
+    # CALL NOMINATIM FOR GEOCODING
     stop = session.get(Stop, stop_id)
     if not stop:
         raise HTTPException(status_code=404, detail="Stop Not Found")
@@ -160,3 +162,34 @@ def reorder_stops(
     session.add_all(stops)
     session.commit()
     return {"ok": True}
+
+@app.get("/stops/routes/{origin_id}/{destination_id}", response_model=Route)
+def get_route(
+    origin_id: int,
+    destination_id: int,
+    session: Session = Depends(get_session)
+):
+    route = session.exec(select(Route).where(
+        Route.origin_id == origin_id,
+        Route.destination_id == destination_id
+    )).first()
+
+    if route:
+        return route
+
+    origin = session.get(Stop, origin_id)
+    destination = session.get(Stop, destination_id)
+
+    if not origin or not destination:
+        raise HTTPException(status_code=404, detail="Stop Not Found")
+    # CALL OPENROUTESERVICE HERE
+    route = Route(
+        origin_id = origin_id,
+        destination_id = destination_id,
+        distance_meters = 0 # OPENROUTESERVICE DATA
+        duration_seconds = 0 # OPENROUTESERVICE DATA
+    )
+    session.add(route)
+    session.commit()
+    session.refresh(route)
+    return route

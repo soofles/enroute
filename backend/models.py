@@ -47,3 +47,11 @@ class StopRequest(SQLModel):
 
 class StopReorder(SQLModel):
     ids: list[int]
+
+class Route(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    origin_id: int = Field(foreign_key="stop.id")
+    destination_id: int = Field(foreign_key="stop.id")
+    distance_meters: int
+    duration_seconds: int
+    calculated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
