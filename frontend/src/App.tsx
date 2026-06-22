@@ -33,11 +33,11 @@ function App() {
   const loadTrips = async () => {
     const res = await getTrips();
     setTrips(res);
-  }
+  };
 
   useEffect(() => {
     loadTrips();
-  }, [])
+  }, []);
 
   const handleCreateTrip = async () => {
     const date = new Date().toLocaleDateString("en-CA");
@@ -84,8 +84,6 @@ function App() {
       category: "",
       description: "",
       address: "",
-      latitude: 0,
-      longitude: 0,
       cost: 0,
       time_zone: "",
       arrival_time: date,

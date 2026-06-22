@@ -3,7 +3,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from db import init_db, get_session
-from models import Trip, TripRequest, Stop, StopRequest, StopReorder, Route, RouteRequest
+from geocoding import geocode, GeocodeError
+from models import Trip, TripRequest, Stop, StopRequest, StopReorder, Route
 
 app = FastAPI()
 
@@ -124,10 +125,15 @@ def update_stop(
     stop_input: StopRequest,
     session: Session = Depends(get_session)
 ):
-    # CALL NOMINATIM FOR GEOCODING
     stop = session.get(Stop, stop_id)
     if not stop:
         raise HTTPException(status_code=404, detail="Stop Not Found")
+    new_address = stop_input.address
+    old_address = stop.address
+    if new_address != old_address:
+        res_lat, res_lon = geocode(new_address)
+        stop.latitude = res_lat
+        stop.longitude = res_lon
     for key, value in stop_input.dict().items():
         setattr(stop, key, value)
     session.add(stop)
@@ -173,10 +179,8 @@ def get_route(
         Route.origin_id == origin_id,
         Route.destination_id == destination_id
     )).first()
-
     if route:
         return route
-
     origin = session.get(Stop, origin_id)
     destination = session.get(Stop, destination_id)
 
@@ -186,8 +190,8 @@ def get_route(
     route = Route(
         origin_id = origin_id,
         destination_id = destination_id,
-        distance_meters = 0 # OPENROUTESERVICE DATA
-        duration_seconds = 0 # OPENROUTESERVICE DATA
+        distance_meters = 0, # OPENROUTESERVICE DATA
+        duration_seconds = 0, # OPENROUTESERVICE DATA
     )
     session.add(route)
     session.commit()
