@@ -1,7 +1,7 @@
 import time
 import requests
 
-GEOCODING_URL = "https://nominatim.openstreemap.org/search"
+GEOCODING_URL = "https://nominatim.openstreetmap.org/search"
 
 HEADERS = {
     "User-Agent": "SophTravelPlanner/0.1"
@@ -10,7 +10,11 @@ HEADERS = {
 class GeocodeError(Exception):
     pass
 
-def geocode(address: str, max_retries: int = 3, timeout: int = 10):
+def geocoding(
+    address: str,
+    max_retries: int = 3,
+    timeout: int = 10
+):
     for attempt in range(max_retries):
         try:
             res = requests.get(
@@ -33,8 +37,8 @@ def geocode(address: str, max_retries: int = 3, timeout: int = 10):
             if not result:
                 return None
             return {
-                "res_lat": float(result[0]["lat"]),
-                "res_lon": float(result[0]["lon"]),
+                "latitude": float(result[0]["lat"]),
+                "longitude": float(result[0]["lon"]),
             }
         except requests.Timeout:
             if attempt < max_retries - 1:

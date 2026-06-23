@@ -1,9 +1,12 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 from db import init_db, get_session
-from geocoding import geocode, GeocodeError
+from geocoding import geocoding, GeocodeError
+from routing import routing, RouteError
 from models import Trip, TripRequest, Stop, StopRequest, StopReorder, Route
 
 app = FastAPI()
@@ -20,6 +23,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
+    load_dotenv()
     init_db()
 
 @app.get("/")
@@ -128,14 +132,17 @@ def update_stop(
     stop = session.get(Stop, stop_id)
     if not stop:
         raise HTTPException(status_code=404, detail="Stop Not Found")
+    for key, value in stop_input.dict().items():
+        setattr(stop, key, value)
     new_address = stop_input.address
     old_address = stop.address
     if new_address != old_address:
-        res_lat, res_lon = geocode(new_address)
-        stop.latitude = res_lat
-        stop.longitude = res_lon
-    for key, value in stop_input.dict().items():
-        setattr(stop, key, value)
+        try:
+            latitude, longitude = geocoding(new_address)
+        except GeocodeError as e:
+            raise HTTPException(status_code=502, detail=str(e))
+        stop.latitude = latitude
+        stop.longitude = longitude
     session.add(stop)
     session.commit()
     session.refresh(stop)
@@ -175,25 +182,57 @@ def get_route(
     destination_id: int,
     session: Session = Depends(get_session)
 ):
+    origin = session.get(Stop, origin_id)
+    destination = session.get(Stop, destination_id)
+    if not origin or not destination:
+        raise HTTPException(status_code=404, detail="Stop Not Found")
+    if (
+        origin.latitude is None or 
+        origin.longitude is None or
+        destination.latitude is None or
+        destination.longitude is None
+    ):
+        raise HTTPException(status_code=400, detail="Coordinates Not Found")
     route = session.exec(select(Route).where(
-        Route.origin_id == origin_id,
-        Route.destination_id == destination_id
+        Route.origin_lat == origin.latitude,
+        Route.origin_lon == origin.longitude,
+        Route.destination_lat == destination.latitude,
+        Route.destination_lon == destination.longitude,
+        Route.profile == "driving-car",
     )).first()
     if route:
         return route
-    origin = session.get(Stop, origin_id)
-    destination = session.get(Stop, destination_id)
-
-    if not origin or not destination:
-        raise HTTPException(status_code=404, detail="Stop Not Found")
-    # CALL OPENROUTESERVICE HERE
+    try:
+        data = routing(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+        )
+    except RouteError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    distance = data["distance_meters"]
+    duration = data["duration_seconds"]
     route = Route(
-        origin_id = origin_id,
-        destination_id = destination_id,
-        distance_meters = 0, # OPENROUTESERVICE DATA
-        duration_seconds = 0, # OPENROUTESERVICE DATA
+        origin_lat = origin.latitude,
+        origin_lon = origin.longitude,
+        destination_lat = destination.latitude,
+        destination_lon = destination.longitude,
+        distance_meters = distance,
+        duration_seconds = duration,
+        profile = "driving-car",
     )
-    session.add(route)
-    session.commit()
-    session.refresh(route)
+    try:
+        session.add(route)
+        session.commit()
+        session.refresh(route)
+    except IntegrityError:
+        session.rollback()
+        route = session.exec(select(Route).where(
+            Route.origin_lat == origin.latitude,
+            Route.origin_lon == origin.longitude,
+            Route.destination_lat == destination.latitude,
+            Route.destination_lon == destination.longitude,
+            Route.profile == "driving-car",
+        )).first()
     return route
