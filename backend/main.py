@@ -1,7 +1,6 @@
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 from db import init_db, get_session
@@ -23,7 +22,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    load_dotenv()
     init_db()
 
 @app.get("/")
@@ -41,7 +39,7 @@ def create_trip(
     session.refresh(trip)
     return trip
 
-@app.get("/trips", response_mode=List[Trip])
+@app.get("/trips", response_model=List[Trip])
 def get_trips(
     session: Session = Depends(get_session)
 ):
@@ -132,17 +130,17 @@ def update_stop(
     stop = session.get(Stop, stop_id)
     if not stop:
         raise HTTPException(status_code=404, detail="Stop Not Found")
-    for key, value in stop_input.dict().items():
-        setattr(stop, key, value)
     new_address = stop_input.address
     old_address = stop.address
+    for key, value in stop_input.dict().items():
+        setattr(stop, key, value)
     if new_address != old_address:
         try:
-            latitude, longitude = geocoding(new_address)
+            coordinates = geocoding(new_address)
         except GeocodeError as e:
             raise HTTPException(status_code=502, detail=str(e))
-        stop.latitude = latitude
-        stop.longitude = longitude
+        stop.latitude = coordinates["latitude"]
+        stop.longitude = coordinates["longitude"]
     session.add(stop)
     session.commit()
     session.refresh(stop)

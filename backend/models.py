@@ -57,7 +57,7 @@ class Route(SQLModel, table=True):
             "destination_lon",
             "profile",
             name="route_coordinates_profile",
-        )
+        ),
     )
     id: Optional[int] = Field(default=None, primary_key=True)
     origin_lat: float

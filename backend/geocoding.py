@@ -4,7 +4,7 @@ import requests
 GEOCODING_URL = "https://nominatim.openstreetmap.org/search"
 
 HEADERS = {
-    "User-Agent": "SophTravelPlanner/0.1"
+    "User-Agent": "SophTravelPlanner/0.1 (soph@soofles.me)"
 }
 
 class GeocodeError(Exception):
