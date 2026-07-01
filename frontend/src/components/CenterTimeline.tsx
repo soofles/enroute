@@ -20,6 +20,8 @@ interface CenterTimelineProps {
     onCreateStop: () => void;
     onDeleteStop: (id: number) => void;
     onDragEnd: (e: DragEndEvent) => void;
+    settingsActive: boolean;
+    onToggleSettings: (active: boolean) => void;
 }
 
 interface TripSummaryProps {
@@ -27,6 +29,10 @@ interface TripSummaryProps {
     stops: Stop[];
     travels: Travel[];
     onUpdateTrip: (id: number, input: TripRequest) => void;
+}
+
+interface SettingsProps {
+    onToggleSettings: (active: boolean) => void;
 }
 
 export default function CenterTimeline({
@@ -38,7 +44,17 @@ export default function CenterTimeline({
     onCreateStop,
     onDeleteStop,
     onDragEnd,
+    settingsActive,
+    onToggleSettings,
 }: CenterTimelineProps) {
+    if (settingsActive) {
+        return (
+            <Settings
+                onToggleSettings={onToggleSettings}
+            />
+        )
+    }
+
     if (!trip) {
         return (
             <main className="welcome-message">
@@ -289,6 +305,16 @@ function TripSummary({
                     <span>{stops.length}</span>
                 </div>
             </div>
+        </div>
+    )
+}
+
+function Settings({
+    onToggleSettings,
+}: SettingsProps) {
+    return (
+        <div onClick={() => onToggleSettings(false)}>
+            close settings
         </div>
     )
 }

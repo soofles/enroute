@@ -32,6 +32,7 @@ function App() {
   const [stops, setStops] = useState<Stop[]>([]);
   const [selectedStopId, setSelectedStopId] = useState<number | null>(null);
   const [travels, setTravels] = useState<Travel[]>([]);
+  const [settingsActive, setSettingsActive] = useState(false);
 
   const loadTrips = async () => {
     const res = await getTrips();
@@ -140,6 +141,8 @@ function App() {
         onSelectTrip={setSelectedTripId}
         onCreateTrip={handleCreateTrip}
         onDeleteTrip={handleDeleteTrip}
+        settingsActive={settingsActive}
+        onToggleSettings={setSettingsActive}
       />
       <CenterTimeline
         trip={trips.find(trip => trip.id === selectedTripId) ?? null}
@@ -151,6 +154,8 @@ function App() {
         onCreateStop={handleCreateStop}
         onDeleteStop={handleDeleteStop}
         onDragEnd={handleDragEnd}
+        settingsActive={settingsActive}
+        onToggleSettings={setSettingsActive}
       />
       <RightSidebar
         stop={stops.find(stop => stop.id === selectedStopId) ?? null}

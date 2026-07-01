@@ -76,6 +76,16 @@
     background: var(--bg-tertiary);
 }
 
+.settings-nav.selected {
+    border-radius: 6px;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.settings-nav.selected:hover {
+    background: var(--bg-quaternary);
+}
+
 .context-menu {
     padding: 0.25rem;
     display: flex;

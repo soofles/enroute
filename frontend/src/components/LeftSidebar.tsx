@@ -8,6 +8,8 @@ interface LeftSidebarProps {
     onSelectTrip: (id: number) => void;
     onCreateTrip: () => Promise<void>;
     onDeleteTrip: (id: number) => void;
+    settingsActive: boolean;
+    onToggleSettings: (active: boolean) => void;
 }
 
 export default function LeftSidebar({
@@ -16,6 +18,8 @@ export default function LeftSidebar({
     onSelectTrip,
     onCreateTrip,
     onDeleteTrip,
+    settingsActive,
+    onToggleSettings,
 }: LeftSidebarProps) {
     const [contextTrip, setContextTrip] = useState<number | null>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -59,7 +63,10 @@ export default function LeftSidebar({
                     )
                 })}
             </div>
-            <div className="settings-nav">
+            <div
+                className={`settings-nav ${settingsActive === true ? "selected" : ""}`}
+                onClick={() => onToggleSettings(true)}
+            >
                 <span>⚙</span>
                 <span>Settings</span>
             </div>
