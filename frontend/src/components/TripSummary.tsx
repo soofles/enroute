@@ -1,8 +1,9 @@
 import "./TripSummary.css"
 import type { Trip } from "../types/Trip"
-import type { TripRequest } from "../api/tripAPI";
+import type { TripRequest } from "../api/tripAPI"
 import type { Stop } from "../types/Stop"
-import type { Travel } from "../types/Travel";
+import type { Travel } from "../types/Travel"
+import { getTripScore } from "../utils/ScoringAlgorithm"
 
 interface TripSummaryProps {
     trip: Trip;
@@ -17,19 +18,30 @@ export default function TripSummary({
     travels,
     onUpdateTrip,
 }: TripSummaryProps) {
+    const scores = getTripScore(stops, travels, trip.budget);
+    
+    const totalCost = stops.reduce((sum, stop) => sum + stop.cost, 0);
+
+    const totalDistance = travels.reduce((sum, travel) => sum + (travel.route === null ? 0 : travel.route.distance_meters), 0) / 1609;
+    const totalDistRounded = totalDistance.toFixed(2);
     return (
         <div className="trip-summary">
             <div className="trip-score">
                 <span>Trip Score</span>
-                <span>X / 100</span>
+                <span>{scores.overallScore} / 100</span>
             </div>
             <div className="trip-message">
                 <span>Trip message here!</span>
             </div>
+            {/*
+            Score based on time efficiency / time management 
+            Start at 100
+            Deduct points for overlaps, impossible travel, etc
+            */}
             <div className="planning-summary">
                 <div className="planning-score">
                     <span>Planning</span>
-                    <span>X / 100</span>
+                    <span>{scores.planningScore} / 100</span>
                 </div>
                 <div className="planning-details">
                     <ul>
@@ -39,10 +51,15 @@ export default function TripSummary({
                     </ul>
                 </div>
             </div>
+            {/*
+            Score based on how close estimated cost is to budget
+            Start at 100
+            Deduct points for how much they are over budget
+            */}
             <div className="budgeting-summary">
                 <div className="budgeting-score">
                     <span>Budgeting</span>
-                    <span>X / 100</span>
+                    <span>{scores.budgetingScore} / 100</span>
                 </div>
                 <div className="budgeting-details">
                     <ul>
@@ -52,10 +69,14 @@ export default function TripSummary({
                     </ul>
                 </div>
             </div>
+            {/*
+            Score based on how complete the trip data is
+            Final score is the ratio of filled in versus total number of fields
+            */}
             <div className="completeness-summary">
                 <div className="completeness-score">
                     <span>Completeness</span>
-                    <span>X / 100</span>
+                    <span>{scores.completenessScore} / 100</span>
                 </div>
                 <div className="completeness-details">
                     <ul>
@@ -68,11 +89,11 @@ export default function TripSummary({
             <div className="trip-analytics">
                 <div className="cost-estimate">
                     <span>Estimated Cost</span>
-                    <span>{trip.budget}</span>
+                    <span>{totalCost}</span>
                 </div>
                 <div className="distance-estimate">
                     <span>Distance Traveled</span>
-                    <span>X</span>
+                    <span>{totalDistRounded}</span>
                 </div>
                 <div className="stop-count">
                     <span>Stops</span>
